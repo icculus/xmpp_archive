@@ -189,13 +189,9 @@ usage() if (not defined $xmppuser);
 usage() if (not defined $maildir);
 
 open DBINFO,'<',$dbinfo or die("Couldn't open '$dbinfo': $!\n");
-my $dsn = <DBINFO>;
-my $dbuser = <DBINFO>;
-my $dbpass = <DBINFO>;
+my ($dsn, $dbuser, $dbpass) = <DBINFO>;
+chomp($dsn, $dbuser, $dbpass);
 close(DBINFO);
-chomp($dsn);
-chomp($dbuser);
-chomp($dbpass);
 
 $tmpemail = "$maildir/tmp/xmpp-chatlog-tmp-$$.txt";
 
