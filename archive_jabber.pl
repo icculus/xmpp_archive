@@ -8,7 +8,7 @@ use POSIX;
 use File::Copy;
 use Date::Manip qw(UnixDate);
 
-my $VERSION = '1.0.5';
+my $VERSION = '1.0.6';
 
 my $gaptime = (30 * 60);
 my $timezone = strftime('%Z', localtime());
