@@ -272,6 +272,7 @@ while (my @row = $sth->fetchrow_array()) {
     }
 
     if (not defined $startids{$with}) {
+        dbgprint("Flushing new per-user startid for '$with'\n");
         if (not flush_startid($with, 0)) {
             fail("didn't flush new startid for '$with'");
         }
@@ -279,7 +280,10 @@ while (my @row = $sth->fetchrow_array()) {
 
     if ( (time() - make_timestamp($utc, 'UTC')) < $gaptime ) {
         dbgprint("timestamp '$utc' is less than $gaptime seconds old.\n");
-        $startid = ($msgid-1) if ((not defined $startid) or ($msgid < $startid));
+        if ((not defined $startid) or ($msgid < $startid)) {
+            $startid = ($msgid-1);
+            dbgprint("forcing global startid to $startid\n");
+        }
         # trash this conversation, it might still be ongoing.
         flush_conversation(1) if ($with eq $lastwith);
         next;
@@ -367,7 +371,12 @@ while (my @row = $sth->fetchrow_array()) {
 $sth->finish();
 $link->disconnect();
 
-$startid = $newestmsgid if (not defined $startid);
+if (defined $startid) {
+    dbgprint("Final startid is $startid\n");
+} else {
+    $startid = $newestmsgid;
+    dbgprint("No definite global startid; using $startid\n");
+}
 
 flush_conversation(0);
 
