@@ -254,8 +254,9 @@ my $lasttime = '';
 my $lastwith = '';
 my $alias = undef;
 my $thisxmppuseralias = $xmppuseralias;
-
+my $startmsgid = undef;
 my $newestmsgid = 0;
+
 $startid = undef;
 
 while (my @row = $sth->fetchrow_array()) {
@@ -271,6 +272,8 @@ while (my @row = $sth->fetchrow_array()) {
         }
     }
 
+    $startmsgid = $msgid if (not defined $startmsgid);
+
     if (not defined $startids{$with}) {
         dbgprint("Flushing new per-user startid for '$with'\n");
         if (not flush_startid($with, 0)) {
@@ -281,7 +284,7 @@ while (my @row = $sth->fetchrow_array()) {
     if ( (time() - make_timestamp($utc, 'UTC')) < $gaptime ) {
         dbgprint("timestamp '$utc' is less than $gaptime seconds old.\n");
         if ((not defined $startid) or ($msgid < $startid)) {
-            $startid = ($msgid-1);
+            $startid = ($startmsgid-1);
             dbgprint("forcing global startid to $startid\n");
         }
         # trash this conversation, it might still be ongoing.
@@ -310,6 +313,8 @@ while (my @row = $sth->fetchrow_array()) {
         $outwith = $with;
         $outid = $coll_id;
         $writing = 1;
+
+        $startmsgid = $msgid;
 
         my $person = $with;
         my ($fullalias,$short) = get_nickname($with);
