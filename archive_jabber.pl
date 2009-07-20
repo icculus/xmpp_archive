@@ -85,9 +85,10 @@ my $lastarchivetmpfname = undef;
 sub flush_startid {
     my ($with, $msgid) = @_;
     $startids{$with} = $msgid;
-    return 0 if (not open(LASTID,'>',$lastarchivetmpfname));
     my $startval = 0;
     $startval = $startid if (defined $startid);
+    dbgprint("flushing startids (global: $startval, '$with': $msgid)\n");
+    return 0 if (not open(LASTID,'>',$lastarchivetmpfname));
     print LASTID "$startval\n";
     foreach(keys %startids) {
         my $key = $_;
@@ -214,10 +215,10 @@ unlink($lastarchivetmpfname);
 $lastarchivefname = "$maildir/xmpp_last_archive_msgids.txt";
 unlink($lastarchivefname) if ($redo);
 if (open(LASTID,'<',$lastarchivefname)) {
-    my $totalid = <LASTID>;
-    chomp($totalid);
-    $startid = $totalid if ($totalid =~ /\A\d+\Z/);
-    dbgprint("startid (total) == $totalid\n");
+    my $globalid = <LASTID>;
+    chomp($globalid);
+    $startid = $globalid if ($globalid =~ /\A\d+\Z/);
+    dbgprint("startid (global) == $globalid\n");
     while (not eof(LASTID)) {
         my $user = <LASTID>;
         chomp($user);
@@ -376,13 +377,7 @@ while (my @row = $sth->fetchrow_array()) {
 $sth->finish();
 $link->disconnect();
 
-if (defined $startid) {
-    dbgprint("Final startid is $startid\n");
-} else {
-    $startid = $newestmsgid;
-    dbgprint("No definite global startid; using $startid\n");
-}
-
+$startid = $newestmsgid if (not defined $startid);
 flush_conversation(0);
 
 exit 0;
