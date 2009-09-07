@@ -165,7 +165,7 @@ sub get_nickname {
 
 sub signal_catcher {
     my $sig = shift;
-    fail("Caught signal #${sig}!");
+    fail("Caught signal ${sig}!");
 }
 $SIG{INT} = \&signal_catcher;
 $SIG{TERM} = \&signal_catcher;
