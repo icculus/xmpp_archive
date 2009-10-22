@@ -187,10 +187,14 @@ while (my @row = $sth->fetchrow_array()) {
     # replace "/me does something" with "*does something*" ...
     $body =~ s#\A/me (.*)\Z#*$1*#;
 
-    my $speaker = $dir ? $thisxmppuseralias : $alias;
+    my $speaker = $dir ? $xmppuserfullalias : $fullalias;
     my ($d, $t) = split_date_time(make_timestamp($utc, 'UTC'));
 
-    print "\n$speaker ($d):\n" if ($lastspeaker ne $speaker);
+    if ($d ne $lastdate) {
+        print "\n$d\n";
+        $lastspeaker = '';
+    }
+    print "\n$speaker:\n" if ($lastspeaker ne $speaker);
     print "$t  $body\n";
 
     $lastdate = $d;
