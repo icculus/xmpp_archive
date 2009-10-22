@@ -20,6 +20,7 @@ binmode(STDERR, ":utf8");
 my $dbinfo = undef;
 my $xmppuser = undef;
 my $maildir = undef;
+my $maxlines = undef;
 my $cmdok = 1;
 
 my $debug = 0;
@@ -28,7 +29,7 @@ sub dbgprint {
 }
 
 sub usage {
-    die("USAGE: $0 <dbinfo> <xmppuser> <maildir>\n");
+    die("USAGE: $0 <dbinfo> <xmppuser> <maildir> <maxlines>\n");
 }
 
 # localize to current timezone and return as unix epoch format.
@@ -93,8 +94,10 @@ foreach (@ARGV) {
     $dbinfo = $_, next if (not defined $dbinfo);
     $xmppuser = $_, next if (not defined $xmppuser);
     $maildir = $_, next if (not defined $maildir);
+    $maxlines = int($_), next if not (defined $maxlines);
     usage();
 }
+$maxlines = 10 if (not defined $maxlines);
 usage() if (not defined $dbinfo);
 usage() if (not defined $xmppuser);
 usage() if (not defined $maildir);
@@ -129,7 +132,7 @@ my $sql = 'select A.* from (select m.id as msgid, m.utc as msgutc, m.dir,' .
           ' inner join archive_collections as c on (m.coll_id = c.id)' .
           " where (c.us = '$xmppuser')" .
           ' and m.utc between DATE_SUB(UTC_TIMESTAMP(), interval 1 day) and UTC_TIMESTAMP()' .
-          ' order by m.id desc limit 10) as A order by A.msgid';
+          " order by m.id desc limit $maxlines) as A order by A.msgid";
 dbgprint("sql = '$sql'\n");
 my $sth = $link->prepare($sql);
 $sth->execute() or fail "can't execute the query: ${sth->errstr}";
