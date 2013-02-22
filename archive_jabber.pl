@@ -47,7 +47,9 @@ sub split_date_time {
 
 sub utc_to_rfc822 {
     my $utc = shift;
-    return UnixDate("$utc UTC", '%a, %d %b %Y %H:%M %Z');
+    my $retval = UnixDate("$utc UTC", '%a, %d %b %Y %H:%M %Z');
+    $retval =~ s/ UTC\Z/ UT/;
+    return $retval;
 }
 
 sub utc_to_local {
