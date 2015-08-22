@@ -239,7 +239,22 @@ my $link = DBI->connect($dsn, $dbuser, $dbpass, {
     'mysql_enable_utf8' => 1
 });
 
-my $sql = 'select m.id, m.utc, m.dir, m.body,' .
+my $baseuser = $xmppuser;
+$baseuser =~ s/\@.*\Z//;
+
+my $sql = "select jid from rosterusers where username='$baseuser'";
+dbgprint("sql = '$sql'\n");
+my $sth = $link->prepare($sql);
+$sth->execute() or fail "can't execute the query: ${sth->errstr}";
+my %authorized;
+while (my @row = $sth->fetchrow_array()) {
+    my ($buddy) = @row;
+    dbgprint("Authorized: '$buddy'\n");
+    $authorized{$buddy} = 1;
+}
+$sth->finish();
+
+$sql = 'select m.id, m.utc, m.dir, m.body,' .
           ' c.id, c.with_user, c.with_server, c.with_resource,' .
           ' c.utc, c.change_utc' .
           ' from archive_messages as m' .
@@ -248,7 +263,7 @@ my $sql = 'select m.id, m.utc, m.dir, m.body,' .
           " and (c.us = '$xmppuser')" .
           ' order by c.with_user, c.with_server, m.id';
 dbgprint("sql = '$sql'\n");
-my $sth = $link->prepare($sql);
+$sth = $link->prepare($sql);
 $sth->execute() or fail "can't execute the query: ${sth->errstr}";
 
 my $lastspeaker = '';
@@ -273,6 +288,11 @@ while (my @row = $sth->fetchrow_array()) {
         foreach(@row) {
             dbgprint("  $_\n");
         }
+    }
+
+    if (not $authorized{$with} and not $nicknames{$with}) {
+        dbgprint("'$with' isn't authorized. Probably spam? Skip it.");
+        next;
     }
 
     $startmsgid = $msgid if (not defined $startmsgid);
